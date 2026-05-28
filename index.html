@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=0">
+    <title>MAFU Host — Simple & Fast</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0d0b14;
+            color: #e0dde8;
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #2e2a3a;
+            margin-bottom: 40px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: -0.5px;
+            color: #f0eaff;
+        }
+        .btn-login {
+            background: #1e1826;
+            color: #f0eaff;
+            padding: 8px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            border: 1px solid #3c324a;
+            transition: background 0.2s;
+        }
+        .btn-login:hover {
+            background: #2c2338;
+        }
+        .hero {
+            text-align: center;
+            padding: 40px 0 60px;
+        }
+        .hero h1 {
+            font-size: clamp(32px, 8vw, 48px);
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #f0eaff;
+        }
+        .hero span {
+            color: #b386d9;
+        }
+        .hero p {
+            color: #b9b0c9;
+            font-size: 18px;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+        .main-btns {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-main {
+            padding: 14px 32px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #3c324a;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .btn-primary {
+            background: #9b59b6;
+            color: #0d0b14;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #af7ac5;
+        }
+        .btn-secondary {
+            background: #1e1826;
+            color: #f0eaff;
+        }
+        .btn-secondary:hover {
+            background: #2c2338;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 60px 0;
+        }
+        .card {
+            background: #15101e;
+            border: 1px solid #2e2a3a;
+            padding: 30px;
+            border-radius: 8px;
+        }
+        .card h3 {
+            color: #f0eaff;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .card p {
+            color: #c9c0d9;
+        }
+        .contact {
+            text-align: center;
+            padding: 50px 20px;
+            background: #15101e;
+            border: 1px solid #2e2a3a;
+            border-radius: 8px;
+            margin: 40px 0;
+        }
+        footer {
+            text-align: center;
+            padding: 40px 0 20px;
+            color: #948aa8;
+            font-size: 13px;
+            border-top: 1px solid #2e2a3a;
+        }
+        @media (max-width: 600px) {
+            .btn-main {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">MAFU HOST</div>
+        <div>
+            <a href="/login" class="btn-login">Login</a>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>Simple <span>Bot Hosting</span> for Developers</h1>
+        <p>Deploy Python bots, manage files, and monitor performance — no distractions.</p>
+        <div class="main-btns">
+            <a href="/login" class="btn-main btn-primary">
+                Launch Console →
+            </a>
+            <a href="https://t.me/mahfuj_offcial_143" class="btn-main btn-secondary" target="_blank">
+                Contact Admin
+            </a>
+        </div>
+    </div>
+
+    <div class="features">
+        <div class="card">
+            <h3>Python Ready</h3>
+            <p>Optimized for Python scripts with automatic dependency handling.</p>
+        </div>
+        <div class="card">
+            <h3>Fast Storage</h3>
+            <p>NVMe SSDs ensure quick read/write for your bots.</p>
+        </div>
+        <div class="card">
+            <h3>Basic Protection</h3>
+            <p>DDoS mitigation keeps your services reachable.</p>
+        </div>
+    </div>
+
+    <div class="contact">
+        <h2 style="color:#f0eaff; margin-bottom:15px;">Need help?</h2>
+        <p style="color:#c9c0d9; margin-bottom:25px;">Contact the developer directly on Telegram.</p>
+        <a href="https://t.me/mahfuj_offcial_143" class="btn-main btn-primary" style="padding:12px 40px;" target="_blank">
+            @mahfuj_offcial_143
+        </a>
+    </div>
+
+    <footer>
+        IK Host — Developed by Imran Kaiser<br>
+        © 2024 All rights reserved.
+    </footer>
+</body>
+</html>
