@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mafu Host — Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#0d0b14; color:#f0eaff; font-family:Arial,Helvetica,sans-serif; padding:20px; }
+        .container { max-width:1000px; margin:0 auto; }
+        .navbar { display:flex; justify-content:space-between; align-items:center; padding-bottom:20px; border-bottom:1px solid #2e2a3a; margin-bottom:30px; }
+        .navbar h2 { color:#f0eaff; }
+        .logo-accent { color:#b386d9; }
+        .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:15px; margin-bottom:30px; }
+        .stat-card { background:#15101e; border:1px solid #2e2a3a; padding:20px; border-radius:6px; color:#b9b0c9; font-size:14px; }
+        .stat-card span { color:#b386d9; font-weight:bold; font-size:18px; display:block; margin-top:4px; }
+        .user-card { background:#15101e; border:1px solid #2e2a3a; padding:18px; margin-bottom:12px; border-radius:6px; }
+        /* Buttons */
+        .btn { padding:6px 12px; border-radius:4px; cursor:pointer; font-size:13px; margin-right:5px; transition:background .2s; }
+        .btn-primary { background:#9b59b6; color:#0d0b14; border:none; }
+        .btn-primary:hover { background:#af7ac5; }
+        .btn-default { background:#1e1826; color:#f0eaff; border:1px solid #3c324a; }
+        .btn-default:hover { background:#2c2338; }
+        .btn-warn { background:transparent; color:#ffb74d; border:1px solid #5a4a2e; }
+        .btn-warn:hover { background:#2c2338; }
+        .btn-danger-outline { background:transparent; color:#ff6b6b; border:1px solid #4a2e3a; }
+        .btn-danger-outline:hover { background:#2c2338; }
+        @media(max-width:600px){ .stats{grid-template-columns:1fr 1fr;} }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="navbar">
+        <h2><span class="logo-accent">MAFUU</span> Admin Panel</h2>
+        <button class="btn btn-primary" onclick="createUser()"><i class="fas fa-plus"></i> New User</button>
+    </div>
+    <div class="stats">
+        <div class="stat-card">Online Servers<span id="onlineCount">0</span></div>
+        <div class="stat-card">Total Servers<span id="totalSrv">0</span></div>
+        <div class="stat-card">Banned Users<span id="suspendedCount">0</span></div>
+        <div class="stat-card">CPU Usage<span id="cpuVal">0%</span></div>
+    </div>
+    <div id="userList"></div>
+</div>
+<script>
+    async function loadData() {
+        const res = await fetch('/admin/stats');
+        const data = await res.json();
+        document.getElementById('cpuVal').textContent = data.sys_cpu;
+        let online = 0, total = 0, banned = 0;
+        const html = data.users.map(u => {
+            total += u.srv_count;
+            online += u.active_srvs;
+            if (u.status === 'banned') banned++;
+            return `
+            <div class="user-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+                    <div>
+                        <strong style="color:#f0eaff;">${u.fname}</strong>
+                        <span style="color:#a89bb8;font-size:13px;"> (${u.email})</span><br>
+                        <small style="color:#a89bb8;">Limit: ${u.server_limit} | Role: <span style="color:#b386d9;">${u.role}</span></small>
+                    </div>
+                    <div style="font-size:13px;">
+                        <span style="color:#4caf50;">${u.active_srvs} 🟢</span>
+                        <span style="color:#a89bb8;"> / ${u.srv_count} total</span>
+                    </div>
+                </div>
+                <div style="margin-top:12px;">
+                    <button class="btn btn-default" onclick="editUser(${u.id},'${u.role}',${u.server_limit},'${u.status}')"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn btn-warn" onclick="toggleBan(${u.id},'${u.status==='active'?'banned':'active'}')">${u.status==='active'?'Ban':'Unban'}</button>
+                    <button class="btn btn-default" onclick="location.href='/admin/manage-user/${u.id}'"><i class="fas fa-server"></i> Servers</button>
+                    <button class="btn btn-danger-outline" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+            </div>`;
+        }).join('');
+        document.getElementById('userList').innerHTML = html || '<p style="color:#a89bb8;">No users found.</p>';
+        document.getElementById('onlineCount').textContent = online;
+        document.getElementById('totalSrv').textContent = total;
+        document.getElementById('suspendedCount').textContent = banned;
+    }
+
+    async function editUser(id, role, limit, status) {
+        const { value: form } = await Swal.fire({
+            title: 'Edit User',
+            background: '#15101e',
+            color: '#f0eaff',
+            html: `
+                <input id="swal-limit" class="swal2-input" placeholder="Server Limit" value="${limit}">
+                <select id="swal-role" class="swal2-input">
+                    <option value="free" ${role==='free'?'selected':''}>Free</option>
+                    <option value="premium" ${role==='premium'?'selected':''}>Premium</option>
+                    <option value="admin" ${role==='admin'?'selected':''}>Admin</option>
+                </select>`,
+            focusConfirm: false,
+            preConfirm: () => ({
+                user_id: id,
+                limit: document.getElementById('swal-limit').value,
+                role: document.getElementById('swal-role').value,
+                status: status
+            })
+        });
+        if (form) {
+            await fetch('/admin/user/update', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(form) });
+            loadData();
+        }
+    }
+
+    async function toggleBan(id, newStatus) {
+        await fetch('/admin/user/update', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ user_id:id, status:newStatus, role:'free', limit:1 }) });
+        loadData();
+    }
+
+    async function createUser() {
+        const { value: v } = await Swal.fire({
+            title: 'New User',
+            background: '#15101e',
+            color: '#f0eaff',
+            html: `
+                <input id="n-name" class="swal2-input" placeholder="Full Name">
+                <input id="n-email" class="swal2-input" placeholder="Email">
+                <input id="n-pass" class="swal2-input" type="password" placeholder="Password">
+                <input id="n-limit" class="swal2-input" placeholder="Server Limit" value="1">`,
+            preConfirm: () => ({
+                name: document.getElementById('n-name').value,
+                email: document.getElementById('n-email').value,
+                pass: document.getElementById('n-pass').value,
+                limit: document.getElementById('n-limit').value
+            })
+        });
+        if (v) {
+            await fetch('/admin/create-user', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(v) });
+            loadData();
+        }
+    }
+
+    async function deleteUser(id) {
+        const c = await Swal.fire({ title:'Delete user?', icon:'warning', background:'#15101e', color:'#f0eaff', showCancelButton:true, confirmButtonColor:'#c62828' });
+        if (c.isConfirmed) {
+            await fetch(`/admin/delete-user/${id}`, { method:'POST' });
+            loadData();
+        }
+    }
+
+    loadData();
+    setInterval(loadData, 5000);
+</script>
+</body>
+</html>
