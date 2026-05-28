@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=0">
+    <title>MAFU Host — Sign Up</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0d0b14;
+            color: #e0dde8;
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .signup-box {
+            background: #15101e;
+            padding: 35px 30px;
+            border-radius: 8px;
+            border: 1px solid #2e2a3a;
+            width: 100%;
+            max-width: 480px;
+        }
+        h2 {
+            color: #f0eaff;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .sub {
+            color: #b9b0c9;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .input-group {
+            margin-bottom: 18px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #c9c0d9;
+            font-size: 13px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 12px;
+            background: #1e1826;
+            border: 1px solid #3c324a;
+            border-radius: 6px;
+            color: #f0eaff;
+            font-size: 14px;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #b386d9;
+        }
+        .file-label {
+            display: block;
+            background: #1e1826;
+            border: 1px dashed #4a3e5a;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            color: #b9b0c9;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .file-label i {
+            margin-right: 8px;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .btn-signup {
+            width: 100%;
+            padding: 14px;
+            background: #9b59b6;
+            color: #0d0b14;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-signup:hover {
+            background: #af7ac5;
+        }
+        .footer-link {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #b9b0c9;
+        }
+        .footer-link a {
+            color: #d4b3e6;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-box">
+        <h2>Create an account</h2>
+        <div class="sub">Join MAFUU Host</div>
+        <form id="signupForm" enctype="multipart/form-data">
+            <div class="row">
+                <div class="input-group">
+                    <label>First Name</label>
+                    <input type="text" name="fname" placeholder="John" required>
+                </div>
+                <div class="input-group">
+                    <label>Last Name</label>
+                    <input type="text" name="lname" placeholder="Doe" required>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" name="username" placeholder="johndoe" required>
+            </div>
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="john@example.com" required>
+            </div>
+            <div class="row">
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="••••••••" required>
+                </div>
+                <div class="input-group">
+                    <label>Confirm</label>
+                    <input type="password" name="confirm_password" placeholder="••••••••" required>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Profile Picture (optional)</label>
+                <input type="file" name="pfp" id="pfpInput" accept="image/*">
+                <label for="pfpInput" class="file-label" id="fileLabel">
+                    <i class="far fa-image"></i> Choose a photo
+                </label>
+            </div>
+            <button type="submit" class="btn-signup">Sign Up</button>
+        </form>
+        <div class="footer-link">
+            Already have an account? <a href="/login">Log in</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('pfpInput').addEventListener('change', function(e) {
+            const label = document.getElementById('fileLabel');
+            if (this.files.length > 0) {
+                label.innerHTML = `<i class="far fa-check-circle"></i> ${this.files[0].name}`;
+            } else {
+                label.innerHTML = `<i class="far fa-image"></i> Choose a photo`;
+            }
+        });
+
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const btn = form.querySelector('button');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            try {
+                const res = await fetch('/signup', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    Swal.fire({ icon: 'success', title: 'Account created', text: 'You can now log in.', timer: 2000, showConfirmButton: false });
+                    setTimeout(() => window.location.href = data.url, 2000);
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Signup failed', text: data.msg });
+                    btn.disabled = false;
+                    btn.textContent = 'Sign Up';
+                }
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Network error' });
+                btn.disabled = false;
+                btn.textContent = 'Sign Up';
+            }
+        });
+    </script>
+</body>
+</html>
