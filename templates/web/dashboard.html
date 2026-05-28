@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=0">
+    <title>MAFU Host — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/theme/dracula.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/python/python.min.js"></script>
+    <style>
+        :root {
+            --bg:        #050505;
+            --card:      #0b0b0b;
+            --card2:     #0f0f0f;
+            --border:    #181818;
+            --border2:   #222;
+            --text:      #e2e2e2;
+            --dim:       #666;
+            --dim2:      #444;
+            --accent:    #00ff66;
+            --accent-bg: #002b14;
+            --accent-bd: #004d26;
+            --accent-hv: #00dd55;
+            --red:       #ff3333;
+            --red-bg:    #1a0000;
+            --red-bd:    #330000;
+            --yellow:    #ffaa00;
+            --yellow-bg: #1a1000;
+            --yellow-bd: #332200;
+            --blue:      #4a9eff;
+            --mono:      'JetBrains Mono', monospace;
+            --sans:      'Inter', sans-serif;
+            --radius:    8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            font-size: 13px;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── TOPBAR ─────────────────────────────────── */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            height: 48px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            font-family: var(--mono);
+            font-weight: 700;
+            font-size: 15px;
+            color: #fff;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .logo-dot { color: var(--accent); }
+        .topbar-right { display: flex; align-items: center; gap: 8px; }
+        .logout-btn {
+            background: var(--red-bg);
+            border: 1px solid var(--red-bd);
+            color: var(--red);
+            padding: 5px 12px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 11px;
+            font-family: var(--sans);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all .18s;
+        }
+        .logout-btn:hover { border-color: #550000; color: #ff5555; background: #220000; }
+
+        /* ── LAYOUT ─────────────────────────────────── */
+        .page { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+        /* ── HOME ───────────────────────────────────── */
+        .home-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .home-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: .3px;
+        }
+        .create-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 7px 16px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: var(--sans);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: all .18s;
+        }
+        .create-btn:hover { background: var(--accent-hv); transform: translateY(-1px); }
+
+        /* bulk bar */
+        .bulk-bar { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+        .bulk-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--dim);
+            padding: 5px 11px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 11px;
+            font-family: var(--sans);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all .18s;
+            white-space: nowrap;
+        }
+        .bulk-btn:hover { background: #111; border-color: var(--border2); color: var(--text); }
+        .bulk-btn.green { color: var(--accent); border-color: var(--accent-bd); background: var(--accent-bg); }
+        .bulk-btn.green:hover { background: #003820; }
+        .bulk-btn.red   { color: var(--red); border-color: var(--red-bd); background: var(--red-bg); }
+        .bulk-btn.red:hover   { background: #220000; }
+        .bulk-btn.blue  { color: var(--blue); border-color: #1a3a5c; background: #0a1a2e; }
+        .bulk-btn.blue:hover  { background: #0d2040; }
+
+        /* toggle */
+        .toggle-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--dim);
+            padding: 5px 11px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 11px;
+            font-family: var(--sans);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: all .18s;
+            user-select: none;
+        }
+        .toggle-btn.on  { border-color: var(--accent-bd); background: var(--accent-bg); color: var(--accent); }
+        .toggle-btn.off { border-color: var(--border); background: var(--card); color: #444; }
+        .toggle-track {
+            width: 26px; height: 14px;
+            border-radius: 7px;
+            background: #222;
+            position: relative;
+            transition: background .18s;
+            flex-shrink: 0;
+        }
+        .toggle-track.on { background: var(--accent); }
+        .toggle-thumb {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #fff;
+            position: absolute;
+            top: 2px; left: 2px;
+            transition: left .18s;
+        }
+        .toggle-track.on .toggle-thumb { left: 14px; }
+
+        /* server cards */
+        .srv-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all .18s;
+        }
+        .srv-card:hover { border-color: var(--border2); background: #0e0e0e; transform: translateX(2px); }
+        .srv-card.running { border-color: #002b14; }
+        .srv-card.suspended { border-color: var(--yellow-bd); opacity: .75; }
+
+        .srv-info { flex: 1; min-width: 0; }
+        .srv-name { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+        .srv-folder { color: #444; font-size: 10px; font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .srv-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+        .srv-stats { text-align: right; }
+        .srv-stats-row { font-size: 10px; color: #555; white-space: nowrap; font-family: var(--mono); margin-top: 4px; }
+
+        .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 5px; white-space: nowrap; font-family: var(--mono); letter-spacing: .5px; }
+        .badge-offline   { background: var(--card); color: #555; border: 1px solid var(--border); }
+        .badge-running   { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-bd); }
+        .badge-suspended { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-bd); }
+
+        .card-action-btn {
+            width: 30px; height: 30px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px;
+            transition: all .18s;
+            flex-shrink: 0;
+            background: var(--card);
+        }
+        .card-action-btn.play { color: var(--accent); border-color: var(--accent-bd); }
+        .card-action-btn.play:hover { background: var(--accent-bg); }
+        .card-action-btn.stop { color: var(--red); border-color: var(--red-bd); }
+        .card-action-btn.stop:hover { background: var(--red-bg); }
+        .card-action-btn.disabled { color: #282828; cursor: not-allowed; }
+        .card-action-btn.disabled:hover { transform: none; }
+
+        .card-del-btn {
+            width: 30px; height: 30px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px;
+            background: var(--card);
+            color: #333;
+            transition: all .18s;
+            flex-shrink: 0;
+        }
+        .card-del-btn:hover { background: var(--red-bg); color: var(--red); border-color: var(--red-bd); }
+
+        /* deploy zone */
+        .deploy-zone {
+            background: var(--card);
+            border: 1px dashed var(--border2);
+            border-radius: 10px;
+            padding: 28px 20px;
+            text-align: center;
+            margin-top: 28px;
+        }
+        .deploy-zone h3 { font-size: 15px; color: #fff; margin-bottom: 6px; }
+        .deploy-zone p { color: #555; font-size: 11px; margin-bottom: 14px; }
+        .deploy-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 7px 18px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: var(--sans);
+            transition: all .18s;
+        }
+        .deploy-btn:hover { background: var(--accent-hv); transform: translateY(-1px); }
+
+        /* empty state */
+        .empty-state {
+            text-align: center;
+            padding: 50px 0;
+            color: #333;
+            font-size: 12px;
+        }
+        .empty-state strong { color: #555; }
+
+        /* ── MANAGE VIEW TOPBAR ─────────────────────── */
+        .manage-topbar {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .manage-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .back-btn {
+            background: #111;
+            border: 1px solid var(--border2);
+            color: var(--dim);
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: var(--sans);
+            display: flex; align-items: center; gap: 5px;
+            transition: all .18s;
+            white-space: nowrap;
+        }
+        .back-btn:hover { background: #181818; color: var(--text); }
+
+        .srv-manage-name { font-weight: 600; font-size: 14px; color: #fff; }
+
+        .status-pill {
+            font-size: 10px; font-weight: 700;
+            padding: 3px 9px; border-radius: 5px;
+            white-space: nowrap; font-family: var(--mono); letter-spacing: .5px;
+        }
+        .status-pill.running  { color: var(--accent); background: var(--accent-bg); border: 1px solid var(--accent-bd); }
+        .status-pill.offline  { color: #555; background: var(--card); border: 1px solid var(--border); }
+        .status-pill.suspended { color: var(--yellow); background: var(--yellow-bg); border: 1px solid var(--yellow-bd); }
+
+        .uptime-text { color: #555; font-size: 10px; font-family: var(--mono); white-space: nowrap; }
+
+        /* manage right action buttons */
+        .manage-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .m-btn {
+            background: #111;
+            border: 1px solid var(--border2);
+            color: #999;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: var(--sans);
+            display: flex; align-items: center; gap: 5px;
+            transition: all .18s;
+            white-space: nowrap;
+        }
+        .m-btn:hover { background: #181818; color: var(--text); border-color: #333; }
+        .m-btn.start { color: var(--accent); border-color: var(--accent-bd); background: var(--accent-bg); }
+        .m-btn.start:hover { background: #003820; }
+        .m-btn.stop  { color: var(--red); border-color: var(--red-bd); background: var(--red-bg); }
+        .m-btn.stop:hover  { background: #220000; }
+        .m-btn.kill  { color: #fff; border-color: #330000; background: #1a0000; }
+        .m-btn.kill:hover  { background: #280000; }
+        .m-btn.delete { color: var(--red); border-color: var(--red-bd); }
+        .m-btn.delete:hover { background: var(--red-bg); }
+
+        /* suspended warning */
+        .susp-warn {
+            background: var(--yellow-bg);
+            border: 1px solid var(--yellow-bd);
+            color: var(--yellow);
+            padding: 9px 14px;
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+            font-size: 11px;
+            display: none;
+        }
+
+        /* ── CONSOLE ────────────────────────────────── */
+        .console-wrap {
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 14px;
+            overflow: hidden;
+            transition: all .25s;
+        }
+        .console-hdr {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .console-hdr-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #555;
+            font-size: 11px;
+            font-family: var(--mono);
+        }
+        .console-hdr-left .dot { color: var(--accent); font-size: 8px; }
+        .console-srv-name { color: #444; font-size: 10px; font-family: var(--mono); }
+        .console-hdr-right { display: flex; gap: 6px; align-items: center; }
+
+        .sm-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--dim);
+            padding: 3px 9px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 10px;
+            font-family: var(--sans);
+            transition: all .18s;
+            white-space: nowrap;
+        }
+        .sm-btn:hover { border-color: var(--border2); color: var(--text); background: #111; }
+        .sm-btn.on { border-color: var(--accent-bd); color: var(--accent); background: var(--accent-bg); }
+        .sm-btn.on:hover { background: #003820; }
+
+        /* font size adjuster */
+        .font-size-ctrl {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .fs-btn {
+            background: none;
+            border: none;
+            color: var(--dim);
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: var(--mono);
+            line-height: 1;
+            transition: all .15s;
+        }
+        .fs-btn:hover { background: #181818; color: var(--accent); }
+        .fs-label {
+            color: var(--accent);
+            font-size: 10px;
+            font-family: var(--mono);
+            min-width: 20px;
+            text-align: center;
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            padding: 3px 2px;
+            user-select: none;
+        }
+
+        #console {
+            height: 240px;
+            overflow-y: auto;
+            padding: 12px 14px;
+            font-family: var(--mono);
+            font-size: 11px;
+            background: #000;
+            color: #999;
+            line-height: 1.7;
+            transition: height .25s;
+        }
+        #console.expanded { height: 340px; }
+        #console div { white-space: pre-wrap; word-break: break-all; }
+        #console div.err-line { color: var(--red); }
+        #console::-webkit-scrollbar { width: 4px; }
+        #console::-webkit-scrollbar-track { background: #000; }
+        #console::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 2px; }
+
+        .cmd-input-wrap {
+            display: flex;
+            align-items: center;
+            background: #080808;
+            border-top: 1px solid var(--border);
+            padding: 8px 12px;
+            gap: 8px;
+        }
+        .cmd-prefix { color: var(--accent); font-size: 13px; flex-shrink: 0; font-family: var(--mono); font-weight: 700; }
+        .cmd-input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 11px;
+            caret-color: var(--accent);
+            min-width: 0;
+        }
+        .cmd-input::placeholder { color: #2a2a2a; }
+        .cmd-send-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--dim);
+            padding: 3px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 10px;
+            font-family: var(--sans);
+            transition: all .18s;
+        }
+        .cmd-send-btn:hover { border-color: var(--accent-bd); color: var(--accent); background: var(--accent-bg); }
+
+        /* ── FILE MANAGER ───────────────────────────── */
+        .fm-section { margin-bottom: 20px; }
+
+        .fm-toggle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px 14px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 0;
+            transition: all .18s;
+            user-select: none;
+        }
+        .fm-toggle-header:hover { background: #0e0e0e; border-color: var(--border2); }
+        .fm-toggle-header.open { border-radius: 10px 10px 0 0; border-bottom-color: transparent; }
+
+        .fm-toggle-left { display: flex; align-items: center; gap: 8px; }
+        .fm-toggle-title { font-size: 11px; font-weight: 700; color: #888; letter-spacing: 1px; font-family: var(--mono); }
+        .fm-toggle-chevron { color: #444; font-size: 11px; transition: transform .2s; }
+        .fm-toggle-header.open .fm-toggle-chevron { transform: rotate(180deg); }
+
+        .fm-body {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+            transition: all .2s;
+        }
+        .fm-body.hidden { display: none; }
+
+        .fm-toolbar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            background: #090909;
+        }
+        .fm-btn {
+            background: #111;
+            border: 1px solid var(--border2);
+            color: var(--dim);
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 10px;
+            font-family: var(--sans);
+            display: flex; align-items: center; gap: 5px;
+            transition: all .18s;
+            white-space: nowrap;
+        }
+        .fm-btn:hover { background: #181818; border-color: #333; color: var(--text); }
+        .fm-btn.danger { color: var(--red); border-color: var(--red-bd); }
+        .fm-btn.danger:hover { background: var(--red-bg); }
+
+        /* breadcrumb */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 7px 14px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border);
+            background: #070707;
+        }
+        .breadcrumb .crumb { color: var(--accent); font-size: 10px; cursor: pointer; font-family: var(--mono); transition: opacity .15s; }
+        .breadcrumb .crumb:hover { opacity: .7; }
+        .breadcrumb .sep { color: #2a2a2a; font-size: 10px; font-family: var(--mono); }
+
+        /* file list */
+        .file-list { overflow: hidden; }
+        .fm-select-all-row {
+            padding: 8px 14px;
+            border-bottom: 1px solid #0d0d0d;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #080808;
+        }
+        .fm-select-all-row label { color: #444; font-size: 10px; cursor: pointer; font-family: var(--mono); }
+
+        .file-item {
+            padding: 9px 14px;
+            border-bottom: 1px solid #0d0d0d;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            transition: background .15s;
+        }
+        .file-item:last-child { border-bottom: none; }
+        .file-item:hover { background: #0d0d0d; }
+        .file-item .f-check { flex-shrink: 0; accent-color: var(--accent); }
+        .file-icon { flex-shrink: 0; font-size: 12px; }
+        .file-icon.folder { color: var(--accent); }
+        .file-icon.file   { color: #383838; }
+        .file-name-txt {
+            flex: 1;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 11px;
+            font-family: var(--mono);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+        }
+        .file-name-txt:hover { color: #fff; }
+        .file-actions-row { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .fa-icon { color: #2a2a2a; cursor: pointer; font-size: 12px; transition: color .15s; }
+        .fa-icon:hover { color: #888; }
+        .fa-icon.red:hover  { color: var(--red); }
+        .fa-icon.blue:hover { color: var(--blue); }
+        .empty-folder { padding: 28px; text-align: center; color: #333; font-size: 11px; font-family: var(--mono); }
+
+        /* ── EDITOR OVERLAY ─────────────────────────── */
+        .editor-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 1000;
+            padding: 14px;
+            display: none;
+            flex-direction: column;
+        }
+        .editor-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .editing-fname { color: var(--accent); font-size: 12px; font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .editor-btns { display: flex; gap: 7px; }
+        .ed-btn {
+            padding: 5px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border2);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: var(--sans);
+            transition: all .18s;
+        }
+        .ed-btn.cancel { background: var(--card); color: var(--dim); }
+        .ed-btn.cancel:hover { background: #111; color: var(--text); }
+        .ed-btn.save { background: var(--accent); color: #000; border-color: var(--accent); }
+        .ed-btn.save:hover { background: var(--accent-hv); }
+        .CodeMirror {
+            flex: 1;
+            border-radius: var(--radius);
+            height: calc(100vh - 80px);
+            font-size: 12px;
+            border: 1px solid var(--border);
+        }
+
+        /* ── CHECKBOX ───────────────────────────────── */
+        input[type=checkbox] { width: 13px; height: 13px; cursor: pointer; accent-color: var(--accent); }
+
+        /* ── SCROLLBAR ──────────────────────────────── */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #1e1e1e; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2a2a2a; }
+
+        /* ── MOBILE ─────────────────────────────────── */
+        @media (max-width: 768px) {
+            .page { padding: 12px; }
+            .topbar { padding: 0 14px; }
+            .manage-topbar { padding: 10px 12px; }
+            #console { height: 180px; }
+            .m-btn span { display: none; }
+        }
+        @media (max-width: 500px) {
+            .manage-left { gap: 6px; }
+            .manage-right { gap: 4px; }
+            .m-btn { padding: 5px 9px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── TOPBAR ─────────────────────────────── -->
+<div class="topbar">
+    <div class="logo">MAFUU<span class="logo-dot">·</span>HOST</div>
+    <div class="topbar-right">
+        <button class="logout-btn" onclick="location.href='/logout'">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     HOME VIEW
+══════════════════════════════════════════ -->
+<div class="page" id="homeView">
+    <div class="home-header">
+        <div class="home-title">Instances</div>
+        <button class="create-btn" onclick="createServer()">
+            <i class="fas fa-plus"></i> Create
+        </button>
+    </div>
+
+    <div class="bulk-bar">
+        <button class="bulk-btn green" onclick="bulkAction('start')">
+            <i class="fas fa-play"></i> Start All
+        </button>
+        <button class="bulk-btn red" onclick="bulkAction('stop')">
+            <i class="fas fa-stop"></i> Stop All
+        </button>
+        <button class="bulk-btn blue" onclick="openZipDeploy()">
+            <i class="fas fa-box-open"></i> Select ZIPs
+        </button>
+        <button class="toggle-btn on" id="autoRunToggle" onclick="toggleAutoRun()"
+                title="Auto-Run ON: ZIPs auto-start after deploy">
+            <div class="toggle-track on" id="autoRunTrack">
+                <div class="toggle-thumb"></div>
+            </div>
+            <span id="autoRunLabel">Auto-Run</span>
+        </button>
+    </div>
+
+    <div id="serverList"></div>
+
+    <div class="deploy-zone" id="deployZone">
+        <h3>📦 Deploy from ZIP</h3>
+        <p>Upload ZIP files to create servers. Each ZIP becomes a server named after the file.</p>
+        <button class="deploy-btn" onclick="openZipDeploy()">
+            <i class="fas fa-cloud-upload-alt"></i> Select ZIPs
+        </button>
+        <input type="file" id="zipDeployInput" style="display:none" accept=".zip" multiple onchange="deployZips(this)">
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MANAGE VIEW
+══════════════════════════════════════════ -->
+<div class="page" id="manageView" style="display:none;">
+
+    <!-- Topbar with inline action buttons -->
+    <div class="manage-topbar">
+        <div class="manage-left">
+            <button class="back-btn" onclick="backToHome()">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+            <span class="srv-manage-name" id="manageServerName">—</span>
+            <span class="status-pill offline" id="statusPill">OFFLINE</span>
+            <span class="uptime-text" id="uptimeText"></span>
+        </div>
+        <div class="manage-right">
+            <button class="m-btn start" onclick="serverAction('start')">
+                <i class="fas fa-play"></i><span> Start</span>
+            </button>
+            <button class="m-btn" onclick="serverAction('restart')">
+                <i class="fas fa-sync-alt"></i><span> Restart</span>
+            </button>
+            <button class="m-btn stop" onclick="serverAction('stop')">
+                <i class="fas fa-stop"></i><span> Stop</span>
+            </button>
+            <button class="m-btn delete" onclick="deleteServer()">
+                <i class="fas fa-trash"></i><span> Delete Server</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Suspended warning -->
+    <div class="susp-warn" id="suspWarn">
+        <i class="fas fa-ban"></i> This server is <strong>suspended by Admin</strong>. You cannot start or delete it.
+    </div>
+
+    <!-- Console -->
+    <div class="console-wrap">
+        <div class="console-hdr">
+            <div class="console-hdr-left">
+                <span class="dot">●</span>
+                <span>CONSOLE</span>
+                <span class="console-srv-name" id="consoleSrvName"></span>
+            </div>
+            <div class="console-hdr-right">
+                <button class="sm-btn" onclick="toggleConsoleExpand()">
+                    <i class="fas fa-expand-alt" id="consoleExpandIcon"></i>
+                </button>
+                <button class="sm-btn on" id="dtToggleBtn" onclick="toggleDateTime()" title="Toggle date/time in logs">
+                    <i class="fas fa-clock"></i> Time
+                </button>
+                <div class="font-size-ctrl">
+                    <button class="fs-btn" onclick="adjustFontSize(-1)" title="Decrease font size">−</button>
+                    <span class="fs-label" id="fsLabel">11</span>
+                    <button class="fs-btn" onclick="adjustFontSize(1)" title="Increase font size">+</button>
+                </div>
+                <button class="sm-btn" id="copyLogBtn" onclick="copyConsole()" title="Copy all logs">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+                <button class="sm-btn" onclick="clearConsole()">
+                    <i class="fas fa-trash-alt"></i> Clear
+                </button>
+            </div>
+        </div>
+        <div id="console"></div>
+        <div class="cmd-input-wrap">
+            <span class="cmd-prefix">$</span>
+            <input class="cmd-input" id="cmdInput" type="text"
+                   placeholder="Type a command..." autocomplete="off" spellcheck="false"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();sendCommand();}">
+            <button class="cmd-send-btn" onclick="sendCommand()">Run</button>
+        </div>
+    </div>
+
+    <!-- File Manager (collapsible) -->
+    <div class="fm-section">
+
+        <div class="fm-toggle-header open" id="fmToggleHeader" onclick="toggleFileManager()">
+            <div class="fm-toggle-left">
+                <i class="fas fa-folder" style="color:var(--accent);font-size:11px;"></i>
+                <span class="fm-toggle-title">FILE MANAGER</span>
+            </div>
+            <i class="fas fa-chevron-down fm-toggle-chevron"></i>
+        </div>
+
+        <div class="fm-body" id="fmBody">
+
+            <!-- Toolbar -->
+            <div class="fm-toolbar">
+                <button class="fm-btn" onclick="createNewItem('folder')">
+                    <i class="fas fa-folder-plus"></i> New Folder
+                </button>
+                <button class="fm-btn" onclick="createNewItem('file')">
+                    <i class="fas fa-file-alt"></i> New File
+                </button>
+                <button class="fm-btn" onclick="document.getElementById('fileUpload').click()">
+                    <i class="fas fa-upload"></i> Upload
+                </button>
+                <input type="file" id="fileUpload" style="display:none" onchange="uploadFile(this)">
+                <button class="fm-btn danger" onclick="bulkDeleteSelected()">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+                <button class="fm-btn" onclick="bulkDownloadSelected()">
+                    <i class="fas fa-download"></i> Download
+                </button>
+                <button class="fm-btn" onclick="bulkZipSelected()">
+                    <i class="fas fa-file-archive"></i> Zip
+                </button>
+            </div>
+
+            <!-- Breadcrumb -->
+            <div class="breadcrumb" id="breadcrumb"></div>
+
+            <!-- File list -->
+            <div class="file-list" id="fileListWrap">
+                <div class="fm-select-all-row">
+                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)">
+                    <label for="selectAll">Select All</label>
+                </div>
+                <div id="fileList"></div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- ── CODE EDITOR OVERLAY ───────────────── -->
+<div class="editor-overlay" id="editorOverlay">
+    <div class="editor-topbar">
+        <span class="editing-fname" id="editingFilename"></span>
+        <div class="editor-btns">
+            <button class="ed-btn cancel" onclick="closeEditor()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="ed-btn save" onclick="saveFile()">
+                <i class="fas fa-save"></i> Save
+            </button>
+        </div>
+    </div>
+    <textarea id="editorTextarea"></textarea>
+</div>
+
+<script>
+    let currentServer  = null;
+    let logInterval    = null;
+    let currentPath    = '';
+    let editor         = null;
+    let cmdHistory     = [];
+    let cmdHistIdx     = -1;
+    let consoleExpanded = false;
+    let showDateTime   = true;
+    let consoleFontSize = 11;  // px, default
+
+    // ─── Helpers ────────────────────────────────
+    function h(s) {
+        return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function ea(s) { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+    function toast(icon, title, text='') {
+        Swal.fire({
+            icon, title, text,
+            toast:true, position:'top-end', timer:2000, showConfirmButton:false,
+            background:'#0b0b0b', color:'#e2e2e2',
+            customClass: { popup: 'toast-popup' }
+        });
+    }
+
+    // ─── HOME VIEW ──────────────────────────────
+    async function loadServers() {
+        const res  = await fetch('/servers');
+        const data = await res.json();
+        const list = document.getElementById('serverList');
+        if (!data.servers || !data.servers.length) {
+            list.innerHTML = `<div class="empty-state">No instances yet. Click <strong>+ Create</strong> to get started.</div>`;
+            return;
+        }
+        list.innerHTML = data.servers.map(s => {
+            const running   = s.online;
+            const suspended = s.status === 'suspended';
+            const cardClass = suspended ? 'suspended' : (running ? 'running' : '');
+            const badge = suspended
+                ? `<span class="badge badge-suspended">SUSPENDED</span>`
+                : running
+                    ? `<span class="badge badge-running">● RUNNING</span>`
+                    : `<span class="badge badge-offline">OFFLINE</span>`;
+            const actionBtn = suspended
+                ? `<button class="card-action-btn disabled" title="Suspended"><i class="fas fa-ban"></i></button>`
+                : running
+                    ? `<button class="card-action-btn stop" onclick="quickStop(event,'${ea(s.folder)}')" title="Stop"><i class="fas fa-stop"></i></button>`
+                    : `<button class="card-action-btn play" onclick="quickStart(event,'${ea(s.folder)}')" title="Start"><i class="fas fa-play"></i></button>`;
+            return `
+            <div class="srv-card ${cardClass}" onclick="openServer('${ea(s.folder)}','${ea(s.name)}','${s.status}','${ea(s.startup||'main.py')}')">
+                <div class="srv-info">
+                    <div class="srv-name">${h(s.name)}</div>
+                    <div class="srv-folder">${h(s.folder)}</div>
+                </div>
+                <div class="srv-right">
+                    <div class="srv-stats">
+                        ${badge}
+                        <div class="srv-stats-row">${h(s.cpu)} &nbsp;${h(s.ram)}</div>
+                    </div>
+                    ${actionBtn}
+                    <button class="card-del-btn" onclick="quickDelete(event,'${ea(s.folder)}','${ea(s.name)}')" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    async function quickStart(e, folder) {
+        e.stopPropagation();
+        await fetch(`/server/action/${folder}/start`, { method:'POST' });
+        loadServers();
+    }
+    async function quickStop(e, folder) {
+        e.stopPropagation();
+        await fetch(`/server/action/${folder}/stop`, { method:'POST' });
+        loadServers();
+    }
+    async function bulkAction(act) {
+        const res  = await fetch('/servers');
+        const data = await res.json();
+        if (!data.servers || !data.servers.length) return;
+        await Promise.all(data.servers.filter(s => s.status !== 'suspended').map(s =>
+            fetch(`/server/action/${s.folder}/${act}`, { method:'POST' })
+        ));
+        loadServers();
+    }
+
+    function openZipDeploy() { document.getElementById('zipDeployInput').click(); }
+
+    // ─── Auto-Run Toggle ────────────────────────
+    let autoRun = true;
+    function toggleAutoRun() {
+        autoRun = !autoRun;
+        const btn   = document.getElementById('autoRunToggle');
+        const track = document.getElementById('autoRunTrack');
+        btn.className   = autoRun ? 'toggle-btn on' : 'toggle-btn off';
+        track.className = autoRun ? 'toggle-track on' : 'toggle-track';
+        btn.title = autoRun ? 'Auto-Run ON: ZIPs auto-start after deploy' : 'Auto-Run OFF';
+    }
+
+    // ─── ZIP Deploy ─────────────────────────────
+    async function deployZips(input) {
+        const files = Array.from(input.files);
+        if (!files.length) return;
+        const doAutoRun = autoRun;
+
+        await Swal.fire({
+            title: '🚀 Deploying...',
+            html: `<div id="deployStatus" style="text-align:left;font-family:'JetBrains Mono',monospace;font-size:11px;color:#aaa;max-height:250px;overflow-y:auto;background:#000;padding:10px;border-radius:6px;"></div>`,
+            background:'#0b0b0b', color:'#e2e2e2',
+            allowOutsideClick:false, showConfirmButton:false,
+            didOpen: async () => {
+                const log = document.getElementById('deployStatus');
+                function addLog(msg, color='#aaa') {
+                    log.innerHTML += `<div style="color:${color};margin-bottom:3px;">${msg}</div>`;
+                    log.scrollTop = log.scrollHeight;
+                }
+                let anyFailed = false;
+
+                for (const file of files) {
+                    addLog(`📦 Deploying: <strong style="color:#fff">${file.name}</strong>`);
+                    addLog('  ① Creating server...','#444');
+                    const name = file.name.replace(/\.zip$/i,'');
+                    let addData;
+                    try {
+                        const r = await fetch('/add', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ name }) });
+                        addData = await r.json();
+                    } catch(e) { addLog('  ✗ Network error','#ff3333'); anyFailed=true; continue; }
+                    if (addData.status !== 'success') { addLog('  ✗ '+(addData.msg||'Failed'),'#ff3333'); anyFailed=true; continue; }
+                    const folder = addData.folder;
+                    addLog('  ✓ Created: '+folder,'#00ff66');
+
+                    addLog('  ② Uploading ZIP...','#444');
+                    let uploadedFilename = file.name;
+                    try {
+                        const fd = new FormData(); fd.append('file',file); fd.append('path','');
+                        const r = await fetch(`/files/upload/${folder}`,{method:'POST',body:fd});
+                        if(!r.ok) throw new Error('HTTP '+r.status);
+                        const ud = await r.json();
+                        if(ud.status!=='success') throw new Error(ud.msg||'Upload failed');
+                        if(ud.filename) uploadedFilename=ud.filename;
+                        addLog('  ✓ Uploaded: '+uploadedFilename,'#00ff66');
+                    } catch(e) { addLog('  ✗ Upload failed: '+e.message,'#ff3333'); anyFailed=true; continue; }
+
+                    addLog('  ③ Extracting...','#444');
+                    try {
+                        const r = await fetch(`/files/unzip/${folder}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:uploadedFilename,path:''})});
+                        const d = await r.json();
+                        if(d.status!=='success') throw new Error(d.msg||'Extraction failed');
+                        addLog('  ✓ Extracted','#00ff66');
+                    } catch(e) { addLog('  ✗ Extraction failed: '+e.message,'#ff3333'); anyFailed=true; continue; }
+
+                    addLog('  ④ Detecting startup...','#444');
+                    try {
+                        const r = await fetch(`/server/detect-startup/${folder}`);
+                        const d = await r.json();
+                        const sf = d.startup||'main.py';
+                        await fetch(`/server/set-startup/${folder}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file:sf})});
+                        addLog('  ✓ Startup: '+sf,'#00ff66');
+                    } catch(e) { addLog('  ⚠ Defaulting to main.py','#ffaa00'); }
+
+                    addLog('  ⑤ Checking requirements.txt...','#444');
+                    try {
+                        const r = await fetch(`/server/sync-install/${folder}`,{method:'POST'});
+                        const d = await r.json();
+                        if(d.status==='skipped') addLog('  — No requirements.txt','#333');
+                        else if(d.status==='success') addLog('  ✓ Packages installed','#00ff66');
+                        else addLog('  ⚠ '+( d.msg||''),'#ffaa00');
+                    } catch(e) { addLog('  ⚠ Could not install: '+e.message,'#ffaa00'); }
+
+                    if (doAutoRun) {
+                        addLog('  ⑥ Starting server...','#444');
+                        try {
+                            const r = await fetch(`/server/action/${folder}/start`,{method:'POST'});
+                            const d = await r.json();
+                            if(d.status==='error') { addLog('  ✗ Start failed: '+d.msg,'#ff3333'); anyFailed=true; }
+                            else addLog('  ✓ Server started!','#00ff66');
+                        } catch(e) { addLog('  ✗ Start error: '+e.message,'#ff3333'); }
+                    } else { addLog('  — Auto-Run OFF, skipping start','#333'); }
+
+                    addLog('');
+                }
+                addLog(anyFailed ? '⚠ Done with some errors' : '✅ All done!', anyFailed ? '#ffaa00' : '#00ff66');
+                Swal.update({ showConfirmButton:true, confirmButtonText:'Close' });
+                input.value='';
+                loadServers();
+            }
+        });
+    }
+
+    async function quickDelete(e, folder, name) {
+        e.stopPropagation();
+        const c = await Swal.fire({ title:`Delete "${name}"?`, text:'All files will be permanently deleted.', icon:'warning', background:'#0b0b0b', color:'#e2e2e2', showCancelButton:true, confirmButtonColor:'#ff3333', confirmButtonText:'Delete' });
+        if (!c.isConfirmed) return;
+        const res  = await fetch(`/server/delete/${folder}`,{method:'POST'});
+        const data = await res.json();
+        if(data.status==='deleted') { loadServers(); toast('success','Deleted'); }
+        else Swal.fire({ icon:'error', title:'Error', text:data.msg, background:'#0b0b0b', color:'#e2e2e2' });
+    }
+
+    async function createServer() {
+        const { value: name } = await Swal.fire({ title:'New Instance', input:'text', inputPlaceholder:'my-bot', background:'#0b0b0b', color:'#e2e2e2', inputValidator: v => !v && 'Name cannot be empty' });
+        if (!name) return;
+        const res  = await fetch('/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+        const data = await res.json();
+        if(data.status==='success') loadServers();
+        else Swal.fire({ icon:'error', title:'Error', text:data.msg, background:'#0b0b0b', color:'#e2e2e2' });
+    }
+
+    // ─── MANAGE VIEW ────────────────────────────
+    function openServer(folder, name, status, startup) {
+        currentServer = { folder, name, status, startup };
+        currentPath   = '';
+        document.getElementById('homeView').style.display   = 'none';
+        document.getElementById('manageView').style.display = 'block';
+        document.getElementById('manageServerName').textContent = name;
+        document.getElementById('consoleSrvName').textContent   = name;
+        const susp = status === 'suspended';
+        document.getElementById('suspWarn').style.display = susp ? 'block' : 'none';
+        // reset console expand
+        consoleExpanded = false;
+        document.getElementById('console').classList.remove('expanded');
+        // reset file manager open
+        document.getElementById('fmBody').classList.remove('hidden');
+        document.getElementById('fmToggleHeader').classList.add('open');
+        updateStatusUI(null);
+        loadFiles();
+        startLogPolling();
+    }
+
+    function backToHome() {
+        clearInterval(logInterval); logInterval = null;
+        document.getElementById('manageView').style.display = 'none';
+        document.getElementById('homeView').style.display   = 'block';
+        loadServers();
+    }
+
+    function updateStatusUI(srv) {
+        const pill   = document.getElementById('statusPill');
+        const uptime = document.getElementById('uptimeText');
+        if (!srv) {
+            pill.className   = 'status-pill offline';
+            pill.textContent = 'OFFLINE';
+            uptime.textContent = '';
+            return;
+        }
+        currentServer.status = srv.status;
+        if (srv.status === 'suspended') {
+            pill.className   = 'status-pill suspended';
+            pill.textContent = 'SUSPENDED';
+            uptime.textContent = '';
+            document.getElementById('suspWarn').style.display = 'block';
+        } else if (srv.online) {
+            pill.className   = 'status-pill running';
+            pill.textContent = '● RUNNING';
+            uptime.textContent = srv.uptime ? `${srv.uptime}` : '';
+            document.getElementById('suspWarn').style.display = 'none';
+        } else {
+            pill.className   = 'status-pill offline';
+            pill.textContent = 'OFFLINE';
+            uptime.textContent = '';
+            document.getElementById('suspWarn').style.display = 'none';
+        }
+    }
+
+    // ─── Server Actions ──────────────────────────
+    async function serverAction(act) {
+        const res  = await fetch(`/server/action/${currentServer.folder}/${act}`,{method:'POST'});
+        const data = await res.json();
+        if(data.status==='error') Swal.fire({ icon:'error', title:'Error', text:data.msg, background:'#0b0b0b', color:'#e2e2e2' });
+        else toast('success', act.charAt(0).toUpperCase()+act.slice(1)+'ed');
+    }
+
+    async function installPackages() {
+        const res  = await fetch(`/server/action/${currentServer.folder}/install`,{method:'POST'});
+        const data = await res.json();
+        if(data.status==='installing') toast('info','Installing...','Check console for progress.');
+        else Swal.fire({ icon:'error', title:'Error', text:data.msg||'Could not install', background:'#0b0b0b', color:'#e2e2e2' });
+    }
+
+    async function deleteServer() {
+        const c = await Swal.fire({ title:'Delete server?', text:'All files will be permanently deleted.', icon:'warning', background:'#0b0b0b', color:'#e2e2e2', showCancelButton:true, confirmButtonColor:'#ff3333', confirmButtonText:'Delete' });
+        if (!c.isConfirmed) return;
+        const res  = await fetch(`/server/delete/${currentServer.folder}`,{method:'POST'});
+        const data = await res.json();
+        if(data.status==='deleted') { backToHome(); toast('success','Deleted'); }
+        else Swal.fire({ icon:'error', title:'Error', text:data.msg, background:'#0b0b0b', color:'#e2e2e2' });
+    }
+
+    // ─── Console ─────────────────────────────────
+    function toggleConsoleExpand() {
+        consoleExpanded = !consoleExpanded;
+        const con  = document.getElementById('console');
+        const icon = document.getElementById('consoleExpandIcon');
+        con.classList.toggle('expanded', consoleExpanded);
+        icon.className = consoleExpanded ? 'fas fa-compress-alt' : 'fas fa-expand-alt';
+    }
+
+    function toggleDateTime() {
+        showDateTime = !showDateTime;
+        const btn = document.getElementById('dtToggleBtn');
+        if (showDateTime) {
+            btn.classList.add('on');
+        } else {
+            btn.classList.remove('on');
+        }
+        pollLog();
+    }
+
+    function adjustFontSize(delta) {
+        consoleFontSize = Math.min(10, Math.max(3, consoleFontSize + delta));
+        document.getElementById('console').style.fontSize = consoleFontSize + 'px';
+        document.getElementById('fsLabel').textContent = consoleFontSize;
+    }
+
+    async function copyConsole() {
+        const con = document.getElementById('console');
+        // Extract plain text from each line div, preserving datetime spans
+        const lines = Array.from(con.querySelectorAll('div')).map(div => div.textContent).join('\n');
+        try {
+            await navigator.clipboard.writeText(lines);
+            const btn = document.getElementById('copyLogBtn');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied';
+            btn.classList.add('on');
+            setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('on'); }, 1500);
+        } catch(e) {
+            toast('error', 'Copy failed', 'Clipboard access denied');
+        }
+    }
+
+    function startLogPolling() {
+        if (logInterval) clearInterval(logInterval);
+        pollLog();
+        logInterval = setInterval(pollLog, 2000);
+    }
+
+    async function pollLog() {
+        try {
+            const res  = await fetch(`/server/log/${currentServer.folder}`);
+            const data = await res.json();
+            const con  = document.getElementById('console');
+            const atBottom = con.scrollHeight - con.scrollTop - con.clientHeight < 60;
+
+            const now = new Date();
+            const pad = n => String(n).padStart(2,'0');
+            const dtStr = `[${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}]`;
+            const dtSpan = `<span style="color:#333;user-select:none;">${h(dtStr)}</span> `;
+
+            con.innerHTML = data.log.split('\n').map(l => {
+                if (!l.trim()) return `<div style="height:3px;"></div>`;
+                const cls = (l.includes('ERROR') || l.includes('✗') || l.includes('Traceback') || l.toLowerCase().includes('error')) ? 'err-line' : '';
+                // Lines that already have a backend timestamp like [2026-04-21 ...] — don't double-stamp
+                const hasTs = /^\[2\d{3}-\d{2}-\d{2}/.test(l.trim());
+                const prefix = (showDateTime && !hasTs) ? dtSpan : '';
+                return `<div class="${cls}">${prefix}${h(l)}</div>`;
+            }).join('');
+
+            if (atBottom) con.scrollTop = con.scrollHeight;
+            const sr = await fetch('/servers');
+            const sd = await sr.json();
+            const srv = sd.servers ? sd.servers.find(s => s.folder === currentServer.folder) : null;
+            if (srv) updateStatusUI(srv);
+        } catch(e) {}
+    }
+
+    async function sendCommand() {
+        const input = document.getElementById('cmdInput');
+        const cmd   = input.value.trim();
+        if (!cmd) return;
+        cmdHistory.unshift(cmd); if(cmdHistory.length>50) cmdHistory.pop(); cmdHistIdx=-1;
+        input.value=''; input.disabled=true;
+        try {
+            const res  = await fetch(`/server/command/${currentServer.folder}`,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({command:cmd}) });
+            const data = await res.json();
+            if(data.status==='error') toast('error','Command Error',data.msg);
+            await pollLog();
+        } catch(e) { toast('error','Network error'); }
+        finally { input.disabled=false; input.focus(); }
+    }
+
+    async function clearConsole() {
+        await fetch(`/files/save/${currentServer.folder}`,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:'console.log',path:'',content:''}) });
+        document.getElementById('console').innerHTML='';
+        toast('success','Console cleared');
+    }
+
+    // ─── File Manager Toggle ─────────────────────
+    function toggleFileManager() {
+        const body   = document.getElementById('fmBody');
+        const header = document.getElementById('fmToggleHeader');
+        const con    = document.getElementById('console');
+        const isOpen = !body.classList.contains('hidden');
+
+        if (isOpen) {
+            body.classList.add('hidden');
+            header.classList.remove('open');
+            // expand console when FM is collapsed
+            con.classList.add('expanded');
+            consoleExpanded = true;
+            document.getElementById('consoleExpandIcon').className = 'fas fa-compress-alt';
+        } else {
+            body.classList.remove('hidden');
+            header.classList.add('open');
+            con.classList.remove('expanded');
+            consoleExpanded = false;
+            document.getElementById('consoleExpandIcon').className = 'fas fa-expand-alt';
+        }
+    }
+
+    // ─── File Manager ─────────────────────────────
+    function updateBreadcrumb() {
+        const parts = currentPath ? currentPath.split('/') : [];
+        let html = `<span class="crumb" onclick="navigateTo('')"><i class="fas fa-home"></i> root</span>`;
+        let built = '';
+        for (const p of parts) {
+            built = built ? built+'/'+p : p;
+            const snap = built;
+            html += `<span class="sep"> / </span><span class="crumb" onclick="navigateTo('${ea(snap)}')">${h(p)}</span>`;
+        }
+        document.getElementById('breadcrumb').innerHTML = html;
+    }
+
+    function navigateTo(path) { currentPath=path; loadFiles(); }
+
+    function toggleSelectAll(checked) {
+        document.querySelectorAll('.f-check').forEach(cb => cb.checked=checked);
+    }
+
+    function getSelectedNames() {
+        return Array.from(document.querySelectorAll('.f-check:checked')).map(cb => cb.dataset.name);
+    }
+
+    async function loadFiles() {
+        updateBreadcrumb();
+        document.getElementById('selectAll').checked = false;
+        const res   = await fetch(`/files/list/${currentServer.folder}?path=${encodeURIComponent(currentPath)}`);
+        const files = await res.json();
+        if (!files.length) {
+            document.getElementById('fileList').innerHTML = '<div class="empty-folder">Empty folder</div>';
+            return;
+        }
+        document.getElementById('fileList').innerHTML = files.map(f => `
+            <div class="file-item">
+                <input type="checkbox" class="f-check" data-name="${h(f.name)}" onchange="updateSelectAllState()">
+                <i class="file-icon ${f.is_dir?'folder fas fa-folder':'file fas fa-file-code'}"></i>
+                <span class="file-name-txt" onclick="${f.is_dir?`enterFolder('${ea(f.name)}')`:`editFile('${ea(f.name)}')`}">${h(f.name)}</span>
+                <span class="file-actions-row">
+                    ${!f.is_dir?`<i class="fas fa-edit fa-icon blue" title="Edit" onclick="editFile('${ea(f.name)}')"></i>`:''}
+                    <i class="fas fa-pencil-alt fa-icon" title="Rename" onclick="renameFile('${ea(f.name)}')"></i>
+                    ${!f.is_dir?`<i class="fas fa-download fa-icon blue" title="Download" onclick="downloadFile('${ea(f.name)}')"></i>`:''}
+                    ${f.is_zip?`<i class="fas fa-file-archive fa-icon" title="Unzip" onclick="unzipFile('${ea(f.name)}')"></i>`:''}
+                    <i class="fas fa-trash fa-icon red" title="Delete" onclick="deleteFile('${ea(f.name)}')"></i>
+                </span>
+            </div>`).join('');
+    }
+
+    function updateSelectAllState() {
+        const all     = document.querySelectorAll('.f-check');
+        const checked = document.querySelectorAll('.f-check:checked');
+        const sa = document.getElementById('selectAll');
+        sa.checked       = all.length===checked.length && all.length>0;
+        sa.indeterminate = checked.length>0 && checked.length<all.length;
+    }
+
+    function enterFolder(name) { currentPath = currentPath ? currentPath+'/'+name : name; loadFiles(); }
+
+    async function bulkDeleteSelected() {
+        const names = getSelectedNames();
+        if (!names.length) { toast('warning','No files selected'); return; }
+        const c = await Swal.fire({ title:`Delete ${names.length} item(s)?`, icon:'warning', background:'#0b0b0b', color:'#e2e2e2', showCancelButton:true, confirmButtonColor:'#ff3333' });
+        if (!c.isConfirmed) return;
+        await fetch(`/files/delete-bulk/${currentServer.folder}`,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({names,path:currentPath}) });
+        loadFiles();
+    }
+
+    async function bulkDownloadSelected() {
+        const names = getSelectedNames();
+        if (!names.length) { toast('warning','No files selected'); return; }
+        const res  = await fetch(`/files/zip-bulk/${currentServer.folder}`,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({names,path:currentPath}) });
+        const data = await res.json();
+        if(data.status==='success') window.location.href=`/files/download/${currentServer.folder}/${encodeURIComponent(data.zip)}?path=${encodeURIComponent(currentPath)}`;
+    }
+
+    async function bulkZipSelected() {
+        const names = getSelectedNames();
+        if (!names.length) { toast('warning','No files selected'); return; }
+        const res  = await fetch(`/files/zip-bulk/${currentServer.folder}`,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({names,path:currentPath}) });
+        const data = await res.json();
+        if(data.status==='success') { loadFiles(); toast('success','Zipped!',data.zip); }
+    }
+
+    async function editFile(name) {
+        const res  = await fetch(`/files/read/${currentServer.folder}?name=${encodeURIComponent(name)}&path=${encodeURIComponent(currentPath)}`);
+        const data = await res.json();
+        document.getElementById('editingFilename').textContent = name;
+        document.getElementById('editorOverlay').style.display = 'flex';
+        if (!editor) {
+            editor = CodeMirror.fromTextArea(document.getElementById('editorTextarea'),{
+                mode:'python', theme:'dracula', lineNumbers:true, lineWrapping:true
+            });
+        }
+        editor.setValue(data.content||'');
+        setTimeout(()=>editor.refresh(),60);
+    }
+    function closeEditor() { document.getElementById('editorOverlay').style.display='none'; }
+    async function saveFile() {
+        const name = document.getElementById('editingFilename').textContent;
+        const res  = await fetch(`/files/save/${currentServer.folder}`,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name,content:editor.getValue(),path:currentPath}) });
+        const data = await res.json();
+        closeEditor();
+        data.status==='saved' ? toast('success','Saved!') : Swal.fire({ icon:'error', title:'Save failed', text:data.msg, background:'#0b0b0b', color:'#e2e2e2' });
+    }
+
+    async function deleteFile(name) {
+        const c = await Swal.fire({ title:'Delete?', text:name, icon:'warning', background:'#0b0b0b', color:'#e2e2e2', showCancelButton:true, confirmButtonColor:'#ff3333' });
+        if(c.isConfirmed) {
+            await fetch(`/files/delete-bulk/${currentServer.folder}`,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({names:[name],path:currentPath}) });
+            loadFiles();
+        }
+    }
+
+    async function renameFile(oldName) {
+        const { value: newName } = await Swal.fire({ title:'Rename', input:'text', inputValue:oldName, background:'#0b0b0b', color:'#e2e2e2', inputValidator: v=>!v&&'Name cannot be empty' });
+        if(newName && newName!==oldName) {
+            await fetch(`/files/rename/${currentServer.folder}`,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({old:oldName,new:newName,path:currentPath}) });
+            loadFiles();
+        }
+    }
+
+    function downloadFile(name) {
+        window.location.href=`/files/download/${currentServer.folder}/${encodeURIComponent(name)}?path=${encodeURIComponent(currentPath)}`;
+    }
+
+    async function unzipFile(name) {
+        Swal.fire({ title:'Extracting...', allowOutsideClick:false, background:'#0b0b0b', color:'#e2e2e2', didOpen:()=>Swal.showLoading() });
+        const res  = await fetch(`/files/unzip/${currentServer.folder}`,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name,path:currentPath}) });
+        const data = await res.json();
+        Swal.close();
+        data.status==='success' ? (loadFiles(), toast('success','Extracted!')) : Swal.fire({ icon:'error', title:'Failed', text:data.msg, background:'#0b0b0b', color:'#e2e2e2' });
+    }
+
+    async function createNewItem(type) {
+        const { value: name } = await Swal.fire({ title:`New ${type}`, input:'text', inputPlaceholder:type==='file'?'script.py':'my_folder', background:'#0b0b0b', color:'#e2e2e2', inputValidator:v=>!v&&'Name cannot be empty' });
+        if (!name) return;
+        const ep = type==='file' ? `/files/create-file/${currentServer.folder}` : `/files/create-folder/${currentServer.folder}`;
+        await fetch(ep,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name,path:currentPath}) });
+        loadFiles();
+    }
+
+    async function uploadFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const fd = new FormData(); fd.append('file',file); fd.append('path',currentPath);
+        await fetch(`/files/upload/${currentServer.folder}`,{method:'POST',body:fd});
+        loadFiles(); input.value=''; toast('success','Uploaded!');
+    }
+
+    // ─── CMD history ─────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('cmdInput').addEventListener('keydown', e => {
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if(cmdHistIdx < cmdHistory.length-1) { cmdHistIdx++; e.target.value=cmdHistory[cmdHistIdx]; }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if(cmdHistIdx>0) { cmdHistIdx--; e.target.value=cmdHistory[cmdHistIdx]; }
+                else { cmdHistIdx=-1; e.target.value=''; }
+            }
+        });
+    });
+
+    // ─── Init ────────────────────────────────────
+    loadServers();
+    setInterval(()=>{
+        if(document.getElementById('homeView').style.display!=='none') loadServers();
+    }, 5000);
+</script>
+</body>
+</html>
